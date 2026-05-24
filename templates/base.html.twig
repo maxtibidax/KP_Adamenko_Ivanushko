@@ -7,8 +7,12 @@
   <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
-  <div class="layout">
-    <aside class="sidebar">
+  <div class="layout" id="app-layout">
+    <div class="mobile-topline">
+      <div class="brand">Кейтеринг</div>
+      <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Открыть меню">☰ Меню</button>
+    </div>
+    <aside class="sidebar" id="sidebar">
       {% set route = app.request.attributes.get('_route') ?? '' %}
       <div class="brand">Кейтеринг</div>
       {% if app.user %}
@@ -71,6 +75,32 @@
       }
       select.form.submit();
     }
+
+    function toggleMenu(forceClose) {
+      const layout = document.getElementById('app-layout');
+      if (!layout) return;
+      if (forceClose) {
+        layout.classList.remove('nav-open');
+      } else {
+        layout.classList.toggle('nav-open');
+      }
+    }
+    document.getElementById('menu-toggle')?.addEventListener('click', function () {
+      toggleMenu(false);
+    });
+    document.querySelectorAll('.nav a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        if (window.matchMedia('(max-width: 900px)').matches) toggleMenu(true);
+      });
+    });
+    document.addEventListener('click', function (event) {
+      const layout = document.getElementById('app-layout');
+      const sidebar = document.getElementById('sidebar');
+      if (!layout || !layout.classList.contains('nav-open') || !sidebar) return;
+      const toggle = document.getElementById('menu-toggle');
+      if (sidebar.contains(event.target) || (toggle && toggle.contains(event.target))) return;
+      toggleMenu(true);
+    });
     document.addEventListener('submit', function (event) {
       let invalid = null;
       event.target.querySelectorAll('[data-future-date]').forEach(function (input) {
