@@ -3,29 +3,39 @@
 {% block title %}Вход{% endblock %}
 
 {% block body %}
-<form method="post">
-    {% if error %}
-        <div class="alert danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-    {% endif %}
+<div style="max-width:400px;margin:60px auto;">
+  {% if error %}
+    <div class="flash danger" role="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+  {% endif %}
 
-    {% if app.user %}
-        <div class="mb-3">
-            Вы вошли как {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Выйти</a>
-        </div>
-    {% endif %}
+  {% if app.user %}
+    <div style="margin-bottom:20px">
+      Вы вошли как {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Выйти</a>
+    </div>
+  {% endif %}
 
-    <h1 class="h3 mb-3 font-weight-normal">Вход в систему</h1>
-    <label for="username">Имя пользователя</label>
-    <input type="text" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="username" required autofocus>
-    <br><br>
-    <label for="password">Пароль</label>
-    <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
+  <h1 style="margin-bottom:24px">Вход в систему</h1>
+
+  <form method="post">
+    <label style="margin-bottom:16px">
+      Имя пользователя
+      <input type="text" value="{{ last_username }}" name="_username" id="username" autocomplete="username" required autofocus
+             style="width:100%;margin-top:6px">
+    </label>
+
+    <label style="margin-bottom:20px">
+      Пароль
+      <input type="password" name="_password" id="password" autocomplete="current-password" required
+             style="width:100%;margin-top:6px">
+    </label>
 
     <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-    <br><br>
-    <button class="btn primary" type="submit">
-        Войти
-    </button>
-</form>
+    <button class="btn" type="submit" style="width:100%">Войти</button>
+  </form>
+
+  <p style="margin-top:20px;text-align:center">
+    Нет аккаунта? <a href="{{ path('app_register') }}" style="color:var(--brand);font-weight:600">Зарегистрироваться</a>
+  </p>
+</div>
 {% endblock %}

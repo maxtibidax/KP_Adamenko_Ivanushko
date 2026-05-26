@@ -52,12 +52,22 @@ class ReportService
             $totalPrepayment += (float) $order['prepayment_amount'];
         }
 
+        $byTypeWithCount = $this->connection->fetchAllAssociative(
+            "SELECT o.event_type, COUNT(*) AS orders_count, SUM(o.total_cost) AS revenue
+             FROM orders o
+             $whereFiltersSql AND o.status <> :cancelled
+             GROUP BY o.event_type
+             ORDER BY revenue DESC",
+            array_merge($params, ['cancelled' => OrderService::STATUS_CANCELLED])
+        );
+
         return [
             'orders' => $orders,
-            'by_type' => $byType,
+            'by_type' => $byTypeWithCount,
             'total_revenue' => $totalRevenue,
             'total_prepayment' => $totalPrepayment,
-            'max_revenue' => max([1, ...array_map(static fn (array $row): float => (float) $row['revenue'], $byType)]),
+            'total_count' => count($orders),
+            'max_revenue' => max([1, ...array_map(static fn (array $row): float => (float) $row['revenue'], $byTypeWithCount)]),
         ];
     }
 
@@ -195,10 +205,9 @@ class ReportService
             $params['price_category'] = $filters['price_category'];
         }
 
+        $havingSql = '';
         if (($filters['only_sold'] ?? '') === '1') {
-            $whereFiltersSql = "HAVING COALESCE(SUM(CASE WHEN o.order_id IS NOT NULL THEN od.serving_number ELSE 0 END), 0) > 0";
-        } else {
-            $whereFiltersSql = "";
+            $havingSql = "HAVING COALESCE(SUM(CASE WHEN o.order_id IS NOT NULL THEN od.serving_number ELSE 0 END), 0) > 0";
         }
         $whereFiltersSql = $where === [] ? '' : 'WHERE '.implode(' AND ', $where);
         $ordersJoinSql = implode(' AND ', $joinConditions);
@@ -212,7 +221,7 @@ class ReportService
              LEFT JOIN orders o ON $ordersJoinSql
              $whereFiltersSql
              GROUP BY d.dish_id, d.dish_name, d.price_category, d.cost_price, d.sale_price
-
+             $havingSql
              ORDER BY total_profit DESC, total_sold DESC, d.dish_name",
             $params
         );

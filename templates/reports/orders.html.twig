@@ -80,29 +80,29 @@
   <section class="card" style="margin-top:16px">
     <h2 style="margin-bottom:12px">Заказы за период</h2>
     <div class="table-wrap">
-    <table class="sortable-table">
+    <table>
       <thead>
         <tr>
-          <th data-col="0" class="sort-th">Дата <span class="sort-icon">⇕</span></th>
-          <th data-col="1" class="sort-th">Клиент <span class="sort-icon">⇕</span></th>
-          <th data-col="2" class="sort-th">Менеджер <span class="sort-icon">⇕</span></th>
-          <th data-col="3" class="sort-th">Тип <span class="sort-icon">⇕</span></th>
-          <th data-col="4" class="sort-th">Статус <span class="sort-icon">⇕</span></th>
-          <th data-col="5" class="sort-th">Стоимость <span class="sort-icon">⇕</span></th>
-          <th data-col="6" class="sort-th">Предоплата <span class="sort-icon">⇕</span></th>
+          <th>Дата</th>
+          <th>Клиент</th>
+          <th>Менеджер</th>
+          <th>Тип</th>
+          <th>Статус</th>
+          <th>Стоимость</th>
+          <th>Предоплата</th>
           <th>Оплата</th>
         </tr>
       </thead>
       <tbody>
       {% for order in report.orders %}
         <tr>
-          <td data-val="{{ order.event_date }}">{{ order.event_date }}</td>
-          <td data-val="{{ order.client_full_name }}">{{ order.client_full_name }}</td>
-          <td data-val="{{ order.manager_full_name }}">{{ order.manager_full_name }}</td>
-          <td data-val="{{ order.event_type }}">{{ order.event_type }}</td>
-          <td data-val="{{ order.status }}">{{ order.status }}</td>
-          <td data-val="{{ order.total_cost }}">{{ order.total_cost|number_format(2, ',', ' ') }} руб.</td>
-          <td data-val="{{ order.prepayment_amount }}">{{ order.prepayment_amount|number_format(2, ',', ' ') }} руб.</td>
+          <td>{{ order.event_date }}</td>
+          <td>{{ order.client_full_name }}</td>
+          <td>{{ order.manager_full_name }}</td>
+          <td>{{ order.event_type }}</td>
+          <td>{{ order.status }}</td>
+          <td>{{ order.total_cost|number_format(2, ',', ' ') }} руб.</td>
+          <td>{{ order.prepayment_amount|number_format(2, ',', ' ') }} руб.</td>
           <td>{% if order.is_fully_paid %}Полная{% else %}Частичная{% endif %}</td>
         </tr>
       {% else %}

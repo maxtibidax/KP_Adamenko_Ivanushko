@@ -136,6 +136,10 @@ class OrderController extends AbstractController
 
         return $this->render('orders/history.html.twig', [
             'order_id' => $id,
+            'order_info' => $connection->fetchAssociative(
+                'SELECT o.event_date, o.event_type, c.client_full_name FROM orders o JOIN client c ON c.client_id = o.client_id WHERE o.order_id = :id',
+                ['id' => $id]
+            ) ?: null,
             'logs' => $logs,
         ]);
     }

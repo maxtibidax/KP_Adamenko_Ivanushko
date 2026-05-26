@@ -51,24 +51,24 @@
     <div class="card">
       <h2 style="margin-bottom:14px">Ближайшие мероприятия</h2>
       <div class="table-wrap">
-        <table class="sortable-table">
+        <table>
           <thead>
             <tr>
-              <th data-col="0" class="sort-th">Дата <span class="sort-icon">⇕</span></th>
-              <th data-col="1" class="sort-th">Клиент <span class="sort-icon">⇕</span></th>
-              <th data-col="2" class="sort-th">Тип <span class="sort-icon">⇕</span></th>
-              <th data-col="3" class="sort-th">Статус <span class="sort-icon">⇕</span></th>
-              <th data-col="4" class="sort-th">Стоимость <span class="sort-icon">⇕</span></th>
+              <th>Дата</th>
+              <th>Клиент</th>
+              <th>Тип</th>
+              <th>Статус</th>
+              <th>Стоимость</th>
             </tr>
           </thead>
           <tbody>
           {% for order in upcoming %}
             <tr>
-              <td data-val="{{ order.event_date }}">{{ order.event_date }}</td>
-              <td data-val="{{ order.client_full_name }}">{{ order.client_full_name }}</td>
-              <td data-val="{{ order.event_type }}">{{ order.event_type }}</td>
+              <td>{{ order.event_date }}</td>
+              <td>{{ order.client_full_name }}</td>
+              <td>{{ order.event_type }}</td>
               <td><span class="pill warn">{{ order.status }}</span></td>
-              <td data-val="{{ order.total_cost }}" style="white-space:nowrap">{{ order.total_cost|number_format(0, ',', ' ') }} руб.</td>
+              <td style="white-space:nowrap">{{ order.total_cost|number_format(0, ',', ' ') }} руб.</td>
             </tr>
           {% else %}
             <tr><td colspan="5" class="muted">Активных мероприятий пока нет</td></tr>

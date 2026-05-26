@@ -1,19 +1,17 @@
 security:
     password_hashers:
+        App\Entity\AppUser: 'auto'
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
     providers:
-        memory_provider:
-            memory:
-                users:
-                    admin: { password: '$2y$10$AAlfx5lSJEW2lOpUGIHPIOejeWtWTadnmjYjHJr.2Ks2AexM9Hhcq', roles: ['ROLE_ADMIN'] }
-                    manager: { password: '$2y$10$I3eYWxAzfaFJCYIBMoKA/e4IGGa6jqGUk1B6GHXwEBfFyfnjpCB96', roles: ['ROLE_MANAGER'] }
+        db_provider:
+            id: App\Security\DbUserProvider
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
             lazy: true
-            provider: memory_provider
+            provider: db_provider
             form_login:
                 login_path: app_login
                 check_path: app_login
@@ -22,4 +20,5 @@ security:
                 path: app_logout
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }

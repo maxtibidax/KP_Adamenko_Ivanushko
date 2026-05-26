@@ -15,7 +15,7 @@
     <h1>Отчет по прибыльности блюд</h1>
     <div class="filters">
         Период: с {{ filters.date_from }} по {{ filters.date_to }}<br>
-        {% if filters.manager_id %}Менеджер: ID {{ filters.manager_id }}<br>{% endif %}
+        {% if filters.manager_name %}Менеджер: {{ filters.manager_name }}<br>{% endif %}
         {% if filters.price_category %}Категория: {{ filters.price_category }}{% endif %}
     </div>
 

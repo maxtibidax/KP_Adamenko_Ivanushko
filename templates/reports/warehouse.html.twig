@@ -51,31 +51,24 @@
   </div>
 
   <section class="grid stats">
-    <div class="card stat"><div class="stat-label">Продуктов</div><div class="value">{{ report.products_count }}</div></div>
-    <div class="card stat"><div class="stat-label">Низкие остатки</div><div class="value">{{ report.low_count }}</div></div>
-    <div class="card stat"><div class="stat-label">Всего на складе</div><div class="value">{{ report.total_quantity|number_format(0, ',', ' ') }}</div></div>
-    <div class="card stat"><div class="stat-label">Заявок в пути</div><div class="value">{{ report.pending_requests }}</div></div>
+    <div class="card stat"><div class="muted">Продуктов</div><div class="value">{{ report.products_count }}</div></div>
+    <div class="card stat"><div class="muted">Низкие остатки</div><div class="value">{{ report.low_count }}</div></div>
+    <div class="card stat"><div class="muted">Всего на складе</div><div class="value">{{ report.total_quantity|number_format(0, ',', ' ') }}</div></div>
+    <div class="card stat"><div class="muted">Заявок в пути</div><div class="value">{{ report.pending_requests }}</div></div>
   </section>
 
   <section class="grid two" style="margin-top:16px">
     <div class="card">
-      <h2 style="margin-bottom:12px">Остатки продуктов</h2>
-      <div class="table-wrap">
-      <table class="sortable-table">
-        <thead><tr>
-          <th data-col="0" class="sort-th">Продукт <span class="sort-icon">⇕</span></th>
-          <th data-col="1" class="sort-th">Остаток <span class="sort-icon">⇕</span></th>
-          <th data-col="2" class="sort-th">Минимум <span class="sort-icon">⇕</span></th>
-          <th data-col="3" class="sort-th">Пополнение <span class="sort-icon">⇕</span></th>
-          <th>Состояние</th>
-        </tr></thead>
+      <h2>Остатки продуктов</h2>
+      <table>
+        <thead><tr><th>Продукт</th><th>Остаток</th><th>Минимум</th><th>Пополнение</th><th>Состояние</th></tr></thead>
         <tbody>
         {% for item in report.stock %}
           <tr>
-            <td data-val="{{ item.product_name }}">{{ item.product_name }}</td>
-            <td data-val="{{ item.quantity }}">{{ item.quantity|number_format(2, ',', ' ') }}</td>
-            <td data-val="{{ item.min_quantity }}">{{ item.min_quantity|number_format(2, ',', ' ') }}</td>
-            <td data-val="{{ item.last_restock_date }}">{{ item.last_restock_date ?: 'Нет данных' }}</td>
+            <td>{{ item.product_name }}</td>
+            <td>{{ item.quantity|number_format(2, ',', ' ') }}</td>
+            <td>{{ item.min_quantity|number_format(2, ',', ' ') }}</td>
+            <td>{{ item.last_restock_date ?: 'Нет данных' }}</td>
             <td>{% if item.is_low %}<span class="pill danger">Нужно пополнить</span>{% else %}<span class="pill ok">Достаточно</span>{% endif %}</td>
           </tr>
         {% else %}
@@ -83,24 +76,17 @@
         {% endfor %}
         </tbody>
       </table>
-      </div>
     </div>
     <div class="card">
-      <h2 style="margin-bottom:12px">Объем поставок по поставщикам</h2>
-      <div class="table-wrap">
-      <table class="sortable-table">
-        <thead><tr>
-          <th data-col="0" class="sort-th">Поставщик <span class="sort-icon">⇕</span></th>
-          <th data-col="1" class="sort-th">Заявок <span class="sort-icon">⇕</span></th>
-          <th data-col="2" class="sort-th">Количество <span class="sort-icon">⇕</span></th>
-          <th>Диаграмма</th>
-        </tr></thead>
+      <h2>Объем поставок по поставщикам</h2>
+      <table>
+        <thead><tr><th>Поставщик</th><th>Заявок</th><th>Количество</th><th>Диаграмма</th></tr></thead>
         <tbody>
         {% for row in report.by_supplier %}
           <tr>
-            <td data-val="{{ row.supplier_name }}">{{ row.supplier_name }}</td>
-            <td data-val="{{ row.requests_count }}">{{ row.requests_count }}</td>
-            <td data-val="{{ row.total_products }}">{{ row.total_products|number_format(2, ',', ' ') }}</td>
+            <td>{{ row.supplier_name }}</td>
+            <td>{{ row.requests_count }}</td>
+            <td>{{ row.total_products|number_format(2, ',', ' ') }}</td>
             <td><div class="bar"><span style="width: {{ row.total_products / report.max_supplier_total * 100 }}%"></span></div></td>
           </tr>
         {% else %}
@@ -108,35 +94,26 @@
         {% endfor %}
         </tbody>
       </table>
-      </div>
     </div>
   </section>
 
   <section class="card" style="margin-top:16px">
-    <h2 style="margin-bottom:12px">Последние заявки поставщикам</h2>
-    <div class="table-wrap">
-    <table class="sortable-table">
-      <thead><tr>
-        <th data-col="0" class="sort-th">Дата <span class="sort-icon">⇕</span></th>
-        <th data-col="1" class="sort-th">Поставщик <span class="sort-icon">⇕</span></th>
-        <th data-col="2" class="sort-th">Менеджер <span class="sort-icon">⇕</span></th>
-        <th>Состав</th>
-        <th data-col="4" class="sort-th">Статус <span class="sort-icon">⇕</span></th>
-      </tr></thead>
+    <h2>Последние заявки поставщикам</h2>
+    <table>
+      <thead><tr><th>Дата</th><th>Поставщик</th><th>Менеджер</th><th>Состав</th><th>Статус</th></tr></thead>
       <tbody>
       {% for request in report.requests %}
         <tr>
-          <td data-val="{{ request.request_date }}">{{ request.request_date }}</td>
-          <td data-val="{{ request.supplier_name }}">{{ request.supplier_name }}</td>
-          <td data-val="{{ request.manager_full_name }}">{{ request.manager_full_name }}</td>
+          <td>{{ request.request_date }}</td>
+          <td>{{ request.supplier_name }}</td>
+          <td>{{ request.manager_full_name }}</td>
           <td>{{ request.products ?: 'Состав не указан' }}</td>
-          <td data-val="{{ request.status }}"><span class="pill {% if request.status == 'Получено' %}ok{% else %}warn{% endif %}">{{ request.status }}</span></td>
+          <td><span class="pill {% if request.status == 'Получено' %}ok{% else %}warn{% endif %}">{{ request.status }}</span></td>
         </tr>
       {% else %}
         <tr><td colspan="5" class="muted">Заявки еще не создавались</td></tr>
       {% endfor %}
       </tbody>
     </table>
-    </div>
   </section>
 {% endblock %}

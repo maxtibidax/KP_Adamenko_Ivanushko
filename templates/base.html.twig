@@ -31,7 +31,8 @@
 
       {% if app.user %}
         <div class="sidebar-user">
-          Вы вошли как <strong>{{ app.user.userIdentifier }}</strong><br>
+          <strong>{{ app.user.fullName|default(app.user.userIdentifier) }}</strong><br>
+          <span class="muted">{{ app.user.userIdentifier }}</span><br>
           <a href="{{ path('app_logout') }}" class="muted">Выйти</a>
         </div>
       {% endif %}

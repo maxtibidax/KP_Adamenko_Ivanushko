@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block body %}
+<div style="max-width:460px;margin:40px auto;">
+  {% for type, messages in app.flashes %}
+    {% for message in messages %}
+      <div class="flash {{ type }}" role="alert">{{ message }}</div>
+    {% endfor %}
+  {% endfor %}
+
+  <h1 style="margin-bottom:24px">Регистрация</h1>
+
+  <form method="post">
+    <label style="margin-bottom:16px">
+      Имя пользователя
+      <input type="text" name="username" value="{{ last_username }}" minlength="3" maxlength="100" autocomplete="username" required autofocus
+             style="width:100%;margin-top:6px">
+      <small class="muted" style="font-size:11px">Минимум 3 символа, используется для входа</small>
+    </label>
+
+    <label style="margin-bottom:16px">
+      Полное имя (ФИО)
+      <input type="text" name="full_name" value="{{ last_fullname }}" maxlength="200" required
+             style="width:100%;margin-top:6px">
+    </label>
+
+    <label style="margin-bottom:16px">
+      Пароль
+      <input type="password" name="password" minlength="6" autocomplete="new-password" required
+             style="width:100%;margin-top:6px">
+      <small class="muted" style="font-size:11px">Минимум 6 символов</small>
+    </label>
+
+    <label style="margin-bottom:20px">
+      Подтверждение пароля
+      <input type="password" name="confirm_password" minlength="6" autocomplete="new-password" required
+             style="width:100%;margin-top:6px">
+    </label>
+
+    <button class="btn" type="submit" style="width:100%">Зарегистрироваться</button>
+  </form>
+
+  <p style="margin-top:20px;text-align:center">
+    Уже есть аккаунт? <a href="{{ path('app_login') }}" style="color:var(--brand);font-weight:600">Войти</a>
+  </p>
+</div>
+{% endblock %}

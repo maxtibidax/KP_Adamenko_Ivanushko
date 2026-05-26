@@ -38,7 +38,7 @@
   </form>
 
   <div class="table-wrap">
-  <table id="orders-table">
+  <table>
     <thead>
       <tr>
         <th><a class="sort-link {% if filters.sort == 'date' %}active{% endif %}" href="{{ path('orders_index', filters|merge({sort: 'date', direction: filters.sort == 'date' and filters.direction == 'asc' ? 'desc' : 'asc', page: 1})) }}">Дата</a></th>
@@ -124,7 +124,7 @@
         </td>
         <td>
           <div class="table-actions">
-            <a class="btn ghost" href="{{ path('orders_history', {id: order.order_id}) }}">История</a>
+            <a class="btn ghost" href="{{ path('orders_history', {id: order.order_id}) }}" title="История изменений">История</a>
             <button class="btn secondary" type="button" onclick="openEditOrder({{ order.order_id }})">Изменить</button>
             {% if order.status not in [STATUS_CANCELLED, STATUS_DONE] %}
               <form method="post" action="{{ path('orders_cancel', {id: order.order_id}) }}" onsubmit="return confirm('Отменить заказ и вернуть продукты на склад?')">

@@ -53,7 +53,7 @@
 ======================================== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-y: scroll; }
 
 body {
   font-family: 'Inter', Arial, sans-serif;
@@ -218,6 +218,7 @@ main {
   padding: 28px 32px;
   min-width: 0;
   max-width: 100%;
+  overflow-x: auto;
 }
 
 /* ========================================
@@ -791,12 +792,28 @@ dialog::backdrop { background: rgba(10,20,40,.55); backdrop-filter: blur(4px); }
 }
 
 /* ========================================
+   RESPONSIVE — SMALL LAPTOP (≤ 1280px)
+======================================== */
+@media (max-width: 1280px) {
+  :root { --sidebar-w: 210px; }
+  main { padding: 24px 20px; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .two { grid-template-columns: 1fr; }
+  .stat .value { font-size: 24px; }
+}
+
+/* ========================================
    RESPONSIVE — TABLET (≤ 1024px)
 ======================================== */
 @media (max-width: 1024px) {
-  :root { --sidebar-w: 220px; }
-  main { padding: 22px 20px; }
+  :root { --sidebar-w: 190px; }
+  main { padding: 20px 16px; }
   .stats { grid-template-columns: repeat(2, 1fr); }
+  h1 { font-size: 22px; }
+  .toolbar label { min-width: calc(50% - 8px); }
+  th, td { padding: 10px 10px; font-size: 12.5px; }
+  .table-actions { flex-wrap: wrap; }
+  .form-grid { grid-template-columns: 1fr; }
 }
 
 /* ========================================
@@ -861,7 +878,7 @@ dialog::backdrop { background: rgba(10,20,40,.55); backdrop-filter: blur(4px); }
   }
 
   .toolbar label { min-width: calc(50% - 4px); }
-  .toolbar .btn  { align-self: flex-end; }
+  .toolbar .btn  { align-self: flex-end; min-width: auto; }
 
   /* Tables — horizontal scroll */
   .table-wrap {
@@ -907,7 +924,7 @@ td input[name="dish_name"] {
 }
 
   /* Reduce button sizes on mobile */
-  .btn { padding: 0 12px; height: 36px; min-height: 36px; font-size: 13px; }
+  .btn { padding: 8px 12px; font-size: 13px; }
 
   /* Pagination wraps */
   .pagination { gap: 4px; }
@@ -927,7 +944,7 @@ td input[name="dish_name"] {
   /* Modal full-width on small screens */
   dialog {
     width: calc(100vw - 16px);
-    max-height: 92vh;
+    max-height: 90vh;
     overflow-y: auto;
   }
 

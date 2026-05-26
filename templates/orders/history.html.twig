@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}История заказа #{{ order_id }}{% endblock %}
+{% block title %}История заказа — {{ order_info.client_full_name ?? '' }}, {{ order_info.event_date ?? '' }}{% endblock %}
 
 {% block body %}
 {% set op_labels = {
@@ -16,8 +16,12 @@
 } %}
   <div class="topline">
     <div>
-      <h1>История заказа #{{ order_id }}</h1>
-      <div class="muted">Лог операций и изменения статусов</div>
+      <h1>История заказа</h1>
+      {% if order_info %}
+        <div class="muted">{{ order_info.client_full_name }}, {{ order_info.event_date }} · {{ order_info.event_type }}</div>
+      {% else %}
+        <div class="muted">Лог операций и изменения статусов</div>
+      {% endif %}
     </div>
     <a class="btn" href="{{ path('orders_index') }}">Назад к заказам</a>
   </div>

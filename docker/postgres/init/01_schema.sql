@@ -99,6 +99,16 @@ CREATE TABLE reserved_products (
     reservation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE app_user (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    full_name VARCHAR(200) NOT NULL,
+    roles JSONB NOT NULL DEFAULT '["ROLE_USER"]',
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 ALTER TABLE Orders ADD CONSTRAINT FK_ORDER_CLIENT FOREIGN KEY (client_id) REFERENCES Client (client_id) ON DELETE RESTRICT;
 ALTER TABLE Orders ADD CONSTRAINT FK_ORDER_MANAGER FOREIGN KEY (manager_id) REFERENCES Manager (manager_id) ON DELETE RESTRICT;
 ALTER TABLE Order_Details ADD CONSTRAINT FK_OD_DISH FOREIGN KEY (dish_id) REFERENCES Dish (dish_id) ON DELETE CASCADE;
@@ -117,7 +127,25 @@ ALTER TABLE reserved_products ADD CONSTRAINT FK_RES_PRODUCT FOREIGN KEY (product
 CREATE INDEX idx_orders_event_date ON Orders (event_date);
 CREATE INDEX idx_orders_status     ON Orders (status);
 CREATE INDEX idx_orders_client_id  ON Orders (client_id);
+CREATE INDEX idx_orders_manager_id ON Orders (manager_id);
 CREATE UNIQUE INDEX idx_orders_client_date ON Orders (client_id, event_date);
+
+-- Secondary indexes for performance and practical query support
+CREATE INDEX idx_supplier_request_status     ON Supplier_Request (status);
+CREATE INDEX idx_supplier_request_supplier_id ON Supplier_Request (supplier_id);
+CREATE INDEX idx_supplier_request_date       ON Supplier_Request (request_date);
+CREATE INDEX idx_supplier_request_manager_id ON Supplier_Request (manager_id);
+CREATE INDEX idx_dish_is_active              ON Dish (is_active);
+CREATE INDEX idx_dish_price_category         ON Dish (price_category);
+CREATE INDEX idx_product_stock_low           ON product_stock (quantity, min_quantity);
+CREATE INDEX idx_operation_log_table_record  ON operation_log (table_name, record_id);
+CREATE INDEX idx_operation_log_date          ON operation_log (operation_date);
+CREATE INDEX idx_reserved_products_order     ON reserved_products (order_id);
+CREATE INDEX idx_reserved_products_product   ON reserved_products (product_id);
+CREATE INDEX idx_order_details_order_id      ON Order_Details (order_id);
+CREATE INDEX idx_recipe_dish_id              ON Recipe (dish_id);
+CREATE INDEX idx_request_details_request_id  ON Request_Details (request_id);
+CREATE INDEX idx_app_user_username           ON app_user (username);
 
 CREATE OR REPLACE FUNCTION log_operation(p_operation_type VARCHAR, p_table_name VARCHAR, p_record_id INT, p_description TEXT)
 RETURNS VOID AS $$
@@ -384,7 +412,7 @@ INSERT INTO Product (product_name) VALUES
 INSERT INTO product_stock (product_id, quantity, min_quantity, last_restock_date)
 SELECT product_id, 100, 10, CURRENT_DATE FROM Product;
 
-INSERT INTO Dish (dish_name, cost_price, sale_price, seasonality) VALUES
+INSERT INTO Dish (dish_name, cost_price, sale_price) VALUES
 ('Салат Цезарь', 180.50, 450.00),
 ('Стейк из говядины', 350.25, 890.00);
 
@@ -395,3 +423,78 @@ INSERT INTO Recipe (product_id, dish_id, number_in_recipe) VALUES
 INSERT INTO Orders (status, manager_id, client_id, event_date, total_cost, event_type, is_fully_paid) VALUES
 ('Выполнен', 1, 1, CURRENT_DATE - INTERVAL '5 days', 5000.00, 'Свадьба', TRUE),
 ('В обработке', 2, 2, CURRENT_DATE + INTERVAL '5 days', 7500.00, 'Корпоратив', FALSE);
+
+-- Default application users (passwords: admin / manager)
+INSERT INTO app_user (username, password, full_name, roles) VALUES
+('admin', '$2y$10$AAlfx5lSJEW2lOpUGIHPIOejeWtWTadnmjYjHJr.2Ks2AexM9Hhcq', 'Администратор системы', '["ROLE_ADMIN"]'),
+('manager', '$2y$10$I3eYWxAzfaFJCYIBMoKA/e4IGGa6jqGUk1B6GHXwEBfFyfnjpCB96', 'Менеджер по умолчанию', '["ROLE_MANAGER"]');
+
+-- ================================================================
+-- VIEWS — пользовательские представления с практическим смыслом
+-- ================================================================
+
+-- VIEW 1: v_active_orders_overview
+-- Обзор активных заказов с полной детализацией: клиент, менеджер, блюда, оплата.
+-- Практическая ценность: единый запрос заменяет многократные JOIN при формировании
+-- повестки дня, списков контактов для обзвона, сводок по предоплатам.
+CREATE OR REPLACE VIEW v_active_orders_overview AS
+SELECT
+    o.order_id,
+    o.event_date,
+    o.event_type,
+    o.status,
+    o.total_cost,
+    o.prepayment_amount,
+    o.is_fully_paid,
+    o.total_cost - o.prepayment_amount AS remaining_payment,
+    c.client_full_name,
+    c.phone_number,
+    m.manager_full_name,
+    COALESCE(string_agg(d.dish_name || ' x ' || od.serving_number, ', ' ORDER BY d.dish_name), '') AS dishes_summary
+FROM orders o
+JOIN client c ON c.client_id = o.client_id
+JOIN manager m ON m.manager_id = o.manager_id
+LEFT JOIN order_details od ON od.order_id = o.order_id
+LEFT JOIN dish d ON d.dish_id = od.dish_id
+WHERE o.status NOT IN ('Выполнен', 'Отменен')
+GROUP BY o.order_id, c.client_full_name, c.phone_number, m.manager_full_name
+ORDER BY o.event_date;
+
+-- VIEW 2: v_stock_with_supply_info
+-- Состояние склада с привязкой к поставщикам и ближайшим ожидающим поставкам.
+-- Практическая ценность: логист и менеджер видят, какие продукты в дефиците,
+-- от какого поставщика обычно поступает каждый продукт, и есть ли уже заявка в пути.
+CREATE OR REPLACE VIEW v_stock_with_supply_info AS
+SELECT
+    p.product_id,
+    p.product_name,
+    s.quantity,
+    s.min_quantity,
+    s.last_restock_date,
+    CASE WHEN s.quantity <= s.min_quantity THEN TRUE ELSE FALSE END AS is_low,
+    s.min_quantity - s.quantity AS shortage,
+    COALESCE(sup.primary_supplier_name, '') AS primary_supplier,
+    COALESCE(latest.pending_date::TEXT, '') AS next_expected_delivery,
+    COALESCE(latest.pending_quantity, 0) AS pending_quantity
+FROM product_stock s
+JOIN product p ON p.product_id = s.product_id
+LEFT JOIN LATERAL (
+    SELECT sr.supplier_id, sup2.supplier_name AS primary_supplier_name
+    FROM request_details rd
+    JOIN supplier_request sr ON sr.request_id = rd.request_id
+    JOIN supplier sup2 ON sup2.supplier_id = sr.supplier_id
+    WHERE rd.product_id = p.product_id
+    GROUP BY sr.supplier_id, sup2.supplier_name
+    ORDER BY SUM(rd.products_number) DESC
+    LIMIT 1
+) sup ON TRUE
+LEFT JOIN LATERAL (
+    SELECT sr.request_date AS pending_date, SUM(rd.products_number) AS pending_quantity
+    FROM request_details rd
+    JOIN supplier_request sr ON sr.request_id = rd.request_id
+    WHERE rd.product_id = p.product_id AND sr.status = 'В пути'
+    GROUP BY sr.request_date
+    ORDER BY sr.request_date
+    LIMIT 1
+) latest ON TRUE
+ORDER BY is_low DESC, shortage DESC, p.product_name;

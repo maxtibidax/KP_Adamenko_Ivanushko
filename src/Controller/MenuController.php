@@ -20,14 +20,18 @@ class MenuController extends AbstractController
         $page = max(1, $request->query->getInt('page', 1));
         $filters = [
             'q' => trim((string) $request->query->get('q', '')),
+            'active' => (string) $request->query->get('active', ''),
             'category' => (string) $request->query->get('category', ''),
         ];
 
+        $result = $references->dishes($filters, $page, 10);
+
         return $this->render('references/menu.html.twig', [
-            'result' => $references->dishes($filters, $page, 10),
+            'result' => $result,
             'page' => $page,
             'filters' => $filters,
             'products' => $references->products(),
+            'recipes' => $references->recipesByDish(array_map(static fn (array $d): int => (int) $d['dish_id'], $result['items'])),
         ]);
     }
 
@@ -46,7 +50,8 @@ class MenuController extends AbstractController
     #[Route('/menu/{id}/toggle', name: 'menu_toggle', methods: ['POST'])]
     public function toggleDish(int $id, Request $request, ReferenceService $references, ErrorMessageFormatter $errors): RedirectResponse
     {
-        return $this->handle($request, $references, $errors, static fn () => $references->toggleDish($id), 'Статус блюда изменен.', 'menu_index');
+        $isActive = (bool) $request->request->get('is_active', false);
+        return $this->handle($request, $references, $errors, static fn () => $references->toggleDish($id, $isActive), 'Статус блюда изменен.', 'menu_index');
     }
 
     #[Route('/menu/{id}/delete', name: 'menu_delete', methods: ['POST'])]

@@ -19,7 +19,7 @@
   <h1>Отчет по заказам</h1>
   <p>Период: {{ filters.date_from }} — {{ filters.date_to }}. Статус: {{ filters.status ?: 'Все' }}. Тип: {{ filters.event_type ?: 'Все' }}.</p>
   <div class="summary">
-    <div>Заказов: <strong>{{ report.orders|length }}</strong></div>
+    <div>Заказов: <strong>{{ report.total_count }}</strong></div>
     <div>Стоимость: <strong>{{ report.total_revenue|number_format(2, ',', ' ') }} руб.</strong></div>
     <div>Предоплата: <strong>{{ report.total_prepayment|number_format(2, ',', ' ') }} руб.</strong></div>
     <div>К оплате: <strong>{{ (report.total_revenue - report.total_prepayment)|number_format(2, ',', ' ') }} руб.</strong></div>
@@ -31,7 +31,7 @@
       <line x1="55" y1="10" x2="55" y2="145" stroke="#64748b" stroke-width="1"/>
       <line x1="55" y1="145" x2="700" y2="145" stroke="#64748b" stroke-width="1"/>
       {% for row in report.by_type %}
-        {% set barHeight = report.max_revenue > 0 ? (row.revenue / report.max_revenue * 110)|round(1) : 0 %}
+        {% set barHeight = report.max_revenue > 0 ? (row.revenue / report.max_revenue * 110) : 0 %}
         {% set x = 75 + loop.index0 * 110 %}
         {% set y = 145 - barHeight %}
         <rect x="{{ x }}" y="{{ y }}" width="52" height="{{ barHeight }}" fill="#0f766e"/>
@@ -41,11 +41,12 @@
     </svg>
   {% endif %}
   <table>
-    <thead><tr><th>Тип</th><th>Выручка</th><th>Доля</th></tr></thead>
+    <thead><tr><th>Тип</th><th>Заказов</th><th>Выручка</th><th>Диаграмма</th></tr></thead>
     <tbody>
     {% for row in report.by_type %}
       <tr>
         <td>{{ row.event_type }}</td>
+        <td>{{ row.orders_count }}</td>
         <td>{{ row.revenue|number_format(2, ',', ' ') }} руб.</td>
         <td>
           {{ report.max_revenue > 0 ? (row.revenue / report.max_revenue * 100)|number_format(0, ',', ' ') : 0 }}%

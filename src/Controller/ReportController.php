@@ -59,6 +59,18 @@ class ReportController extends AbstractController
     public function profitability(Request $request, ReportService $reportService, Connection $connection): Response
     {
         $filters = $this->profitabilityFilters($request);
+
+        // Resolve manager name for display in PDF
+        if ($filters['manager_id'] !== '') {
+            $managerRow = $connection->fetchAssociative(
+                'SELECT manager_full_name FROM manager WHERE manager_id = :id',
+                ['id' => (int) $filters['manager_id']]
+            );
+            $filters['manager_name'] = $managerRow ? $managerRow['manager_full_name'] : '';
+        } else {
+            $filters['manager_name'] = '';
+        }
+
         $report = $reportService->buildProfitabilityReport($filters);
         $format = (string) $request->query->get('format', 'html');
 
@@ -190,8 +202,8 @@ class ReportController extends AbstractController
             $sheet->fromArray([$row['event_type'], (float) $row['revenue']], null, 'J'.$chartRow);
             $chartRow++;
         }
-
-        // СТРОКА ВЫЗОВА ДИАГРАММЫ ($this->addBarChart...) УДАЛЕНА
+        $chartStartRow = $rowNumber + 3;
+        $this->addBarChart($sheet, 'ordersRevenueChart', 'Выручка по типам мероприятий', 'J', 'K', $chartRow - 1, 'J'.$chartStartRow, 'N'.($chartStartRow + 14));
 
         foreach (range('A', 'K') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
@@ -199,7 +211,7 @@ class ReportController extends AbstractController
 
         return new StreamedResponse(static function () use ($spreadsheet): void {
             $writer = new Xlsx($spreadsheet);
-            $writer->setIncludeCharts(false); // Отключаем рендеринг диаграмм в итоговом файле Excel
+            $writer->setIncludeCharts(true); // Отключаем рендеринг диаграмм в итоговом файле Excel
             $writer->save('php://output');
         }, 200, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -258,7 +270,8 @@ class ReportController extends AbstractController
             $requestsSheet->fromArray([$row['supplier_name'], (float) $row['total_products']], null, 'G'.$chartRow);
             $chartRow++;
         }
-        $this->addBarChart($requestsSheet, 'supplierProductsChart', 'Объем поставок по поставщикам', 'G', 'H', $chartRow - 1, 'G5', 'K18');
+        $requestsSheetChartStartRow = $rowNumber + 2;
+        $this->addBarChart($requestsSheet, 'supplierProductsChart', 'Объем поставок по поставщикам', 'G', 'H', $chartRow - 1, 'G'.$requestsSheetChartStartRow, 'K'.($requestsSheetChartStartRow + 14));
         foreach (range('G', 'H') as $column) {
             $requestsSheet->getColumnDimension($column)->setAutoSize(true);
         }
